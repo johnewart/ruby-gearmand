@@ -1,0 +1,29 @@
+## MAC OS
+.DS_Store
+
+## TEXTMATE
+*.tmproj
+tmtags
+
+## EMACS
+*~
+\#*
+.\#*
+
+## VIM
+*.swp
+
+## PROJECT::GENERAL
+coverage
+rdoc
+pkg
+
+## PROJECT::SPECIFIC
+*.log
+*.log.*
+.bundle
+
+## PROJECT::PUBLIC_WEB_SITE
+public_web/output
+public_web/tmp/dependencies
+

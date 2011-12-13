@@ -1,0 +1,96 @@
+#!/usr/bin/env ruby
+$: << File.dirname(__FILE__)
+$: << File.dirname(__FILE__) + '/../'
+GEARMAN_ENV = ENV["GEARMAN_ENV"] || "development"
+APP_ROOT = File.join(File.dirname(__FILE__) , "..")
+
+require 'lib/rgearmand'
+  
+def logger
+  @logger ||= if ENV['LOG_TO_STDOUT']
+    Logger.new(STDOUT)
+  else
+    if GEARMAN_ENV == 'profiling' || GEARMAN_ENV == 'development' || ENV['LOG_TO_FILE']
+      Logger.new(OPTIONS[:logfile], File::WRONLY | File::APPEND)
+    else
+      SyslogLogger.new('rgearmand', Syslog::LOG_LOCAL7)
+    end
+  end
+
+  if GEARMAN_ENV == 'profiling' || GEARMAN_ENV == 'development'
+    @logger.level = Logger::DEBUG
+  else
+    @logger.level = Logger::WARN
+  end
+  
+  @logger
+end
+
+require 'optparse'
+
+# Parse options, then proceed
+
+OPTIONS = {}
+optparse = OptionParser.new do |opts|
+  # Set a banner, displayed at the top
+  # of the help screen.
+  opts.banner = "Usage: rgearmand [options] hostname"
+
+  # Define the options, and what they do
+  OPTIONS[:port] = 4730
+  opts.on( '-p', '--port PORT', 'Listen on PORT' ) do |port|
+    OPTIONS[:port] = port.to_i
+  end
+  
+  OPTIONS[:logfile] = "rgearmand.log"
+  opts.on( '-l', '--logfile FILE', 'Write log to FILE' ) do |file|
+    OPTIONS[:logfile] = file
+  end
+
+  OPTIONS[:ip] = "0.0.0.0"
+  opts.on('-b', '--bind IP', 'Bind to IP (default is all IPs)') do |ip|
+    OPTIONS[:ip] = ip
+  end
+  
+  Rgearmand.call_optionses(opts)
+  
+  # This displays the help screen, all programs are
+  # assumed to have this option.
+  opts.on( '-h', '--help', 'Display this screen' ) do
+    puts opts
+    exit
+  end
+end  
+
+optparse.parse!
+
+# We'll get the hostname from `hostname`
+if ARGV.length != 1
+  HOSTNAME = `hostname`.chomp
+else
+  HOSTNAME = ARGV[0]
+end
+
+# -- Main 
+
+logger.debug "Gearmand starting up as #{HOSTNAME}..."
+if GEARMAN_ENV == 'profiling'
+  require 'ruby-prof'
+  RubyProf.start
+end
+
+begin
+  Rgearmand::GearmanServer.start  
+rescue RuntimeError => e
+  if e.message =~ /no acceptor/
+    $stderr.puts "Looks like you have something else running on port #{OPTIONS[:port]}."
+  end
+  raise
+end
+
+if GEARMAN_ENV == 'profiling'
+  result = RubyProf.stop
+  # Print a flat profile to text
+  printer = RubyProf::FlatPrinter.new(result)
+  printer.print(STDOUT, 0)
+end
