@@ -15,7 +15,6 @@ module Rgearmand
 			logger.debug "Can do: #{func_name}"
       worker.capabilities << func_name
 			logger.debug "Worker capabilities: #{worker.inspect}"
-      logger.debug "Job "
       @capabilities << func_name
       worker_queue.can_do(func_name, self)
 
@@ -46,11 +45,7 @@ module Rgearmand
       worker = Worker.find_or_create_by_worker_id(@worker_id)
       worker.update_attributes({:last_seen => Time.now()})
       
-      if job = worker_queue.grab_job(@capabilities)
-        # TODO: Maybe re-implement this later...
-        #job.worker = worker
-        #job.save
-        
+      if job = worker_queue.grab_job(@capabilities)        
         logger.debug "Handed out job"
         if unique
           respond :job_assign_uniq, job[:job_handle], job.func_name, job[:uniq], job[:data]

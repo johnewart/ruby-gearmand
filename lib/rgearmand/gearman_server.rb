@@ -30,10 +30,10 @@ module Rgearmand
     def self.start
       @hostname = HOSTNAME
       logger.debug "Hostname: #{@hostname}"
-      persist_forever = true
+
       @port = nil
       @worker_queue = WorkerQueue.new(@hostname)
-      @persistent_queue = JobQueue.new(@worker_queue,{:record_stats => false})
+      @persistent_queue = JobQueue.new(@worker_queue, {:record_stats => false})
       @worker_queue.persistent_queue = @persistent_queue 
       
       EventMachine::run {

@@ -131,24 +131,6 @@ module Rgearmand
       nil
     end
     
-    def enqueue_job(job)
-      #func_name = job.func_name
-      #priority = job.priority.to_sym || "normal"
-      #timestamp = job.timestamp
-            
-      #unless @queues.has_key?(func_name) 
-      #  @queues[func_name] = { 
-      #    "normal" => Containers::PriorityQueue.new() { |y, x| (x <=> y) == 1 }, 
-      #    "high" => Containers::PriorityQueue.new() { |y, x| (x <=> y) == 1 }, 
-      #    "low" => Containers::PriorityQueue.new() { |y, x| (x <=> y) == 1 } 
-      #  }
-      #end
-      
-      #@queues[func_name][priority].push(job, timestamp.to_i)
-
-      return job.job_handle
-    end
-    
     def enqueue(opts = {})
       func_name = opts[:func_name] || opts["func_name"]
       priority = opts[:priority] || opts["priority"] || "normal"
